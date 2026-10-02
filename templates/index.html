@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A local notes and memo writing app with Ollama AI assistance.">
+    <title>Notes / Memo Writing</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <button id="menu-button" class="icon-button" type="button" aria-label="Open notes menu">
+          <span aria-hidden="true">☰</span>
+        </button>
+
+        <div class="brand-lockup">
+          <span class="brand-mark" aria-hidden="true">✦</span>
+          <div>
+            <p class="app-badge">Notes / Memo Writing</p>
+            <h1>Recent Notes</h1>
+          </div>
+        </div>
+
+        <button id="ai-agent-button" class="ai-agent-button" type="button" aria-haspopup="dialog">
+          <span class="sparkle" aria-hidden="true">✦</span>
+          <span>AI Agent</span>
+        </button>
+      </header>
+
+      <section id="list-view" class="app-view" aria-labelledby="notes-heading">
+        <div class="section-toolbar">
+          <div>
+            <p class="section-kicker">YOUR SPACE</p>
+            <h2 id="notes-heading">All notes</h2>
+          </div>
+          <button id="search-toggle" class="round-icon-button" type="button" aria-label="Search notes" aria-expanded="false">
+            <span aria-hidden="true">⌕</span>
+          </button>
+        </div>
+
+        <form id="search-form" class="search-form" hidden>
+          <label class="sr-only" for="search-input">Search notes</label>
+          <span aria-hidden="true">⌕</span>
+          <input id="search-input" type="search" placeholder="Search your notes…" autocomplete="off">
+          <button id="clear-search" class="search-clear" type="button" aria-label="Clear search">×</button>
+        </form>
+
+        <div id="notes-grid" class="notes-grid" aria-live="polite" aria-label="Saved notes"></div>
+        <section id="empty-state" class="empty-state" hidden>
+          <span class="empty-icon" aria-hidden="true">✎</span>
+          <h2>No notes yet</h2>
+          <p>Tap the plus button to capture your first idea.</p>
+          <button id="empty-add-button" class="primary-button" type="button">Create a note</button>
+        </section>
+        <section id="no-results-state" class="empty-state" hidden>
+          <span class="empty-icon" aria-hidden="true">⌕</span>
+          <h2>No matches</h2>
+          <p>Try another search term.</p>
+        </section>
+
+        <button id="add-note-button" class="fab" type="button" aria-label="Create a new note">+</button>
+        <div id="trash-drop-zone" class="trash-drop-zone" hidden role="button" aria-label="Drop note here to delete">
+          <span class="trash-icon" aria-hidden="true">⌫</span>
+          <span>Drop here to delete</span>
+        </div>
+      </section>
+
+      <section id="editor-view" class="app-view" aria-labelledby="editor-title" hidden>
+        <header class="editor-header">
+          <button id="back-button" class="icon-button" type="button" aria-label="Back to recent notes">
+            <span aria-hidden="true">←</span>
+          </button>
+          <div>
+            <p id="editor-mode" class="section-kicker">NEW NOTE</p>
+            <h2 id="editor-heading">Write something</h2>
+          </div>
+          <button id="editor-save-button" class="save-button" type="button">Save</button>
+        </header>
+
+        <article id="editor-card" class="editor-card">
+          <div class="editor-card-topline">
+            <div class="color-picker">
+              <span class="color-picker-label">Note color</span>
+              <div id="editor-color-palette" class="color-palette" role="radiogroup" aria-label="Choose a note color"></div>
+              <label class="custom-color-swatch" for="editor-custom-color" title="Choose a custom color">
+                <span aria-hidden="true">+</span>
+                <input id="editor-custom-color" type="color" value="#fff6a5" aria-label="Choose a custom note color">
+              </label>
+              <input id="editor-color" type="hidden" value="#fff6a5">
+            </div>
+            <button id="editor-delete-button" class="delete-icon-button" type="button" aria-label="Delete note">⌫</button>
+          </div>
+          <label class="sr-only" for="editor-title">Note title</label>
+          <input id="editor-title" class="editor-title" type="text" maxlength="200" placeholder="Untitled note">
+          <div class="editor-markdown-tools">
+            <div class="editor-tabs" role="tablist" aria-label="Note editor mode">
+              <button id="write-tab" class="editor-tab is-active" type="button" role="tab" aria-selected="true">Write</button>
+              <button id="preview-tab" class="editor-tab" type="button" role="tab" aria-selected="false">Preview</button>
+            </div>
+            <div class="markdown-shortcuts" aria-label="Markdown shortcuts">
+              <span class="markdown-badge">Markdown</span>
+              <button type="button" data-markdown-insert="bold" aria-label="Insert bold Markdown">B</button>
+              <button type="button" data-markdown-insert="italic" aria-label="Insert italic Markdown"><em>I</em></button>
+              <button type="button" data-markdown-insert="bullet" aria-label="Insert Markdown bullet">•</button>
+              <button type="button" data-markdown-insert="task" aria-label="Insert Markdown checkbox">☐</button>
+            </div>
+          </div>
+          <label class="sr-only" for="editor-content">Note content</label>
+          <textarea id="editor-content" class="editor-content" placeholder="Start writing your note…"></textarea>
+          <div id="editor-markdown-preview" class="editor-markdown-preview markdown-preview" role="tabpanel" tabindex="0" hidden></div>
+          <p class="markdown-hint">Use <code>**bold**</code>, <code>*italic*</code>, or <code>- [_] task</code>. Click checkboxes in Preview.</p>
+          <div class="editor-bottomline">
+            <span id="editor-status" class="editor-status" aria-live="polite">Ready to write</span>
+            <button id="editor-ai-button" class="editor-ai-button" type="button">
+              <span class="sparkle" aria-hidden="true">✦</span>
+              Ask AI Agent
+            </button>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <div id="ai-agent-modal" class="modal-backdrop" hidden>
+      <section class="modal ai-modal" role="dialog" aria-modal="true" aria-labelledby="ai-modal-heading">
+        <header class="modal-header">
+          <div class="modal-title-lockup">
+            <span class="ai-orb" aria-hidden="true">✦</span>
+            <div>
+              <p class="section-kicker">LOCAL ASSISTANT</p>
+              <h2 id="ai-modal-heading">AI Agent</h2>
+            </div>
+          </div>
+          <button id="close-ai-modal" class="modal-close" type="button" aria-label="Close AI Agent">×</button>
+        </header>
+        <p class="modal-copy">Polish a note, find the key idea, or turn a thought into a plan.</p>
+        <div id="ai-progress-overlay" class="ai-progress-overlay" hidden aria-live="polite" aria-busy="true">
+          <div class="ai-progress-heading">
+            <span class="ai-progress-orb" aria-hidden="true"><span class="sparkle">✦</span></span>
+            <div>
+              <p class="section-kicker">LOCAL MODEL WORKING</p>
+              <h3 id="ai-progress-title">Reading your note…</h3>
+            </div>
+          </div>
+          <div class="ai-working-preview">
+            <div class="preview-label-row">
+              <span>Working preview</span>
+              <span class="preview-pulse" aria-hidden="true"></span>
+            </div>
+            <p id="ai-preview-text">Preparing your note for the local model…</p>
+            <div class="preview-skeleton" aria-hidden="true"><span></span><span></span><span></span></div>
+          </div>
+          <div class="ai-progress-track" aria-hidden="true"><span id="ai-progress-bar"></span></div>
+          <p class="ai-progress-footnote">The final wording will appear when Ollama finishes.</p>
+        </div>
+        <form id="ai-agent-form">
+          <label class="modal-field" for="ai-note-select">
+            <span>Work on</span>
+            <select id="ai-note-select"></select>
+          </label>
+          <label class="modal-field" for="ai-action-select">
+            <span>Ask it to</span>
+            <select id="ai-action-select">
+              <option value="summarize">Summarize this note</option>
+              <option value="fix_spelling">Fix spelling &amp; grammar</option>
+              <option value="expand">Expand into action items</option>
+              <option value="custom">Follow a custom instruction</option>
+            </select>
+          </label>
+          <label id="custom-prompt-field" class="modal-field" for="ai-custom-prompt" hidden>
+            <span>Instruction</span>
+            <textarea id="ai-custom-prompt" placeholder="For example: Translate this to Spanish and keep the bullet points."></textarea>
+          </label>
+          <div class="modal-actions">
+            <button id="cancel-ai-modal" class="secondary-button" type="button">Cancel</button>
+            <button id="run-ai-button" class="primary-button" type="submit">
+              <span class="sparkle" aria-hidden="true">✦</span>
+              Run AI action
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </body>
+</html>

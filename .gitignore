@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+!.env.example
+sticky_notes.db
+*.db
+*.sqlite
+*.sqlite3
